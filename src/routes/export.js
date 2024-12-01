@@ -1,6 +1,9 @@
 const express = require('express');
 const excelExporter = require('../utils/excelExporter');
-const { Product, Batch } = require('../models');
+const { Product } = require('../models/Product');
+const { Batch } = require('../models/Batch');
+
+
 
 const router = express.Router();
 

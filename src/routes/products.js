@@ -1,5 +1,7 @@
 const express = require('express');
-const { Product, Batch } = require('../../src/models');
+const { Product } = require('../models/Product');
+const { Batch } = require('../models/Batch');
+
 
 const router = express.Router();
 
