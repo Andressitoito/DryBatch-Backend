@@ -1,15 +1,17 @@
 {
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "seed": "node seedDatabase.js"
   },
   "dependencies": {
-    "express": "^4.x",
-    "express-session": "^1.x",
     "bcrypt": "^5.x",
-    "sequelize": "^6.x",
-    "pg": "^8.x",
     "cors": "^2.x",
     "dotenv": "^16.x",
-    "exceljs": "^4.x"
+    "exceljs": "^4.x",
+    "express": "^4.x",
+    "express-session": "^1.x",
+    "mysql2": "^3.11.5",
+    "pg": "^8.x",
+    "sequelize": "^6.x"
   }
 }

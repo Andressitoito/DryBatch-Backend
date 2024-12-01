@@ -30,7 +30,15 @@ app.use('/products', productRoutes);
 app.use('/export', exportRoutes);
 
 // Connect to database
-const sequelize = new Sequelize(process.env.DB_CONNECTION_STRING);
+const sequelize = new Sequelize(process.env.DB_CONNECTION_STRING, {
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    }
+  }
+
+});
 (async () => {
   try {
     await sequelize.authenticate();
@@ -41,7 +49,22 @@ const sequelize = new Sequelize(process.env.DB_CONNECTION_STRING);
 })();
 
 // Start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection established successfully.');
+
+    // Synchronize all models
+    await sequelize.sync(); // Alternatively, use { force: true } for development to reset tables
+    console.log('Database synchronized.');
+
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+})();
+
