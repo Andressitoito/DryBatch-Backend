@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.x",
+    "express-session": "^1.x",
+    "bcrypt": "^5.x",
+    "sequelize": "^6.x",
+    "pg": "^8.x",
+    "cors": "^2.x",
+    "dotenv": "^16.x",
+    "exceljs": "^4.x"
+  }
+}
