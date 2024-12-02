@@ -1,8 +1,9 @@
+// Import necessary libraries
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { Sequelize } = require('sequelize');
+const sequelize = require('./src/database');
 
 // Load environment variables
 dotenv.config();
@@ -19,52 +20,38 @@ app.use(session({
   saveUninitialized: false,
 }));
 
-// Import routes
-const authRoutes = require('./src/routes/auth');
-const productRoutes = require('./src/routes/products');
-const exportRoutes = require('./src/routes/export');
+// Import models
+const Product = require('./src/models/Product');
+const Measurement = require('./src/models/Measurement');
 
-// Use routes
-app.use('/auth', authRoutes);
-app.use('/products', productRoutes);
-app.use('/export', exportRoutes);
+// Define model relationships
+Product.hasMany(Measurement, { foreignKey: 'productCode', sourceKey: 'code' });
+Measurement.belongsTo(Product, { foreignKey: 'productCode', targetKey: 'code' });
 
-// Connect to database
-const sequelize = new Sequelize(process.env.DB_CONNECTION_STRING, {
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    }
-  }
-
-});
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection established successfully.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
-})();
-
-// Start server
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
+// This sync will make sure tables are created before handling any requests
 (async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
 
     // Synchronize all models
-    await sequelize.sync(); // Alternatively, use { force: true } for development to reset tables
+    await sequelize.sync(); // Use { force: true } for development to reset tables
     console.log('Database synchronized.');
-
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
 })();
 
+// Import routes
+const productRoutes = require('./src/routes/products');
+const exportRoutes = require('./src/routes/export');
+
+// Use routes
+app.use('/products', productRoutes);
+app.use('/export', exportRoutes);
+
+// Start server
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
