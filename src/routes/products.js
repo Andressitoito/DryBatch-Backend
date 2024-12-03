@@ -16,23 +16,30 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create new product
+// Create new product with measurements
 router.post('/', async (req, res) => {
-  const { name, code, measurements } = req.body;
+  const { name, code, createdAt, measurements } = req.body;
   try {
-    const newProduct = await Product.create({ name, code });
+    // Create the product
+    const newProduct = await Product.create({
+      name,
+      code,
+      createdAt,
+    });
 
-    // If measurements are provided in the request, create them and associate them with the product
+    // Create associated measurements
     if (measurements && measurements.length > 0) {
-      const newMeasurements = measurements.map(measurement => ({
+      const newMeasurements = measurements.map((measurement) => ({
         ...measurement,
-        productCode: newProduct.code,
+        productId: newProduct.id,
       }));
       await Measurement.bulkCreate(newMeasurements);
     }
 
     // Fetch the newly created product including its measurements
-    const productWithMeasurements = await Product.findByPk(newProduct.id, { include: Measurement });
+    const productWithMeasurements = await Product.findByPk(newProduct.id, {
+      include: Measurement,
+    });
 
     res.status(201).json(productWithMeasurements);
   } catch (error) {
@@ -56,11 +63,11 @@ router.get('/:id', async (req, res) => {
 
 // Update product details
 router.put('/:id', async (req, res) => {
-  const { name, code } = req.body;
+  const { name, code, createdAt } = req.body;
   try {
     const product = await Product.findByPk(req.params.id);
     if (product) {
-      await product.update({ name, code });
+      await product.update({ name, code, createdAt });
       res.status(200).json(product);
     } else {
       res.status(404).send('Product not found');
@@ -85,10 +92,10 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Add or Edit a measurement for a product
+// Add a new measurement for a product
 router.post('/:productId/measurements', async (req, res) => {
   const { productId } = req.params;
-  const { id, tare, initialGross, currentGross, lastUpdatedBy, timestamp } = req.body;
+  const { tare, initialGross, currentGross, lastUpdatedBy } = req.body;
 
   try {
     // Find the product by primary key
@@ -97,33 +104,18 @@ router.post('/:productId/measurements', async (req, res) => {
       return res.status(404).send('Product not found');
     }
 
-    let measurement;
-    if (id) {
-      // If id is provided, try to find the measurement to update it
-      measurement = await Measurement.findByPk(id);
+    // Create a new measurement associated with the product
+    const newMeasurement = await Measurement.create({
+      tare,
+      initialGross,
+      currentGross,
+      lastUpdatedBy,
+      productId,
+    });
 
-      if (measurement) {
-        // Update existing measurement
-        await measurement.update({ tare, initialGross, currentGross, lastUpdatedBy, timestamp });
-        res.status(200).json(measurement);
-      } else {
-        res.status(404).send('Measurement not found for update');
-      }
-    } else {
-      // If no id, create a new measurement associated with the product
-      measurement = await Measurement.create({
-        tare,
-        initialGross,
-        currentGross,
-        lastUpdatedBy,
-        timestamp,
-        productCode: product.code,
-      });
-
-      res.status(201).json(measurement);
-    }
+    res.status(201).json(newMeasurement);
   } catch (error) {
-    res.status(500).json({ error: 'Error adding or editing measurement', details: error.message });
+    res.status(500).json({ error: 'Error adding measurement', details: error.message });
   }
 });
 

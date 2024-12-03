@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const sequelize = require('./src/database');
+const sequelize = require('./src/database'); // Database connection
 
 // Load environment variables
 dotenv.config();
@@ -14,28 +14,36 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 // Import models
 const Product = require('./src/models/Product');
 const Measurement = require('./src/models/Measurement');
 
 // Define model relationships
-Product.hasMany(Measurement, { foreignKey: 'productCode', sourceKey: 'code' });
-Measurement.belongsTo(Product, { foreignKey: 'productCode', targetKey: 'code' });
+Product.hasMany(Measurement, { foreignKey: 'productId' }); // Establish one-to-many relationship between Product and Measurement
+Measurement.belongsTo(Product, { foreignKey: 'productId' });
 
-// This sync will make sure tables are created before handling any requests
+// This sync will ensure tables are created before handling any requests
 (async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
 
     // Synchronize all models
-    await sequelize.sync(); // Use { force: true } for development to reset tables
+    if (process.env.NODE_ENV === 'development') {
+      // Use { force: true } in development to reset tables if needed, but avoid data loss in production
+      await sequelize.sync({ force: true });
+    } else {
+      await sequelize.sync();
+    }
+
     console.log('Database synchronized.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);

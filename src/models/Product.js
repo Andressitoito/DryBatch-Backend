@@ -1,6 +1,7 @@
 // src/models/Product.js
+
 const { DataTypes } = require('sequelize');
-const sequelize = require('../database'); // Correct the path if it's in ../database
+const sequelize = require('../database');
 
 const Product = sequelize.define('Product', {
   id: {
@@ -18,8 +19,9 @@ const Product = sequelize.define('Product', {
     allowNull: false,
   },
 }, {
-  tableName: 'Products', // Explicitly define the table name
+  tableName: 'Products',
   timestamps: true,
 });
 
 module.exports = Product;
+
