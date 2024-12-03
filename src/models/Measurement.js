@@ -1,9 +1,10 @@
 // src/models/Measurement.js
 
 const { DataTypes } = require('sequelize');
-const sequelize = require('../database');
+const sequelize = require('../database'); // Update path if needed to match your structure
 const Product = require('./Product');
 
+// Define the Measurement model
 const Measurement = sequelize.define('Measurement', {
   id: {
     type: DataTypes.INTEGER,
@@ -26,22 +27,18 @@ const Measurement = sequelize.define('Measurement', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  timestamp: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  productCode: {
-    type: DataTypes.STRING,
+  productId: {
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: {
       model: Product,
-      key: 'code',
+      key: 'id',
     },
   },
 });
 
-// Define relationships between Product and Measurement
-Product.hasMany(Measurement, { foreignKey: 'productCode', sourceKey: 'code' });
-Measurement.belongsTo(Product, { foreignKey: 'productCode', targetKey: 'code' });
+// Define relationships between Measurement and Product
+Product.hasMany(Measurement, { foreignKey: 'productId' });
+Measurement.belongsTo(Product, { foreignKey: 'productId' });
 
 module.exports = Measurement;
