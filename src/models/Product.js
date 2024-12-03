@@ -1,8 +1,9 @@
 // src/models/Product.js
 
 const { DataTypes } = require('sequelize');
-const sequelize = require('../database');
+const sequelize = require('../database'); // Update path if needed to match your structure
 
+// Define the Product model
 const Product = sequelize.define('Product', {
   id: {
     type: DataTypes.INTEGER,
@@ -15,13 +16,9 @@ const Product = sequelize.define('Product', {
   },
   code: {
     type: DataTypes.STRING,
-    unique: true,
     allowNull: false,
+    unique: true,
   },
-}, {
-  tableName: 'Products',
-  timestamps: true,
 });
 
 module.exports = Product;
-
