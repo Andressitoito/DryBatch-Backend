@@ -42,7 +42,7 @@ Container.belongsTo(Measurement, { foreignKey: 'measurementId' });
     console.log('Database connection established successfully.');
 
     // Synchronize all models
-    await sequelize.sync({ force: true }); // Use { force: true } during development to reset tables
+    await sequelize.sync(); // Use { force: true } during development to reset tables
     console.log('Database synchronized.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
