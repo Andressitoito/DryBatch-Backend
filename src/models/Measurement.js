@@ -3,6 +3,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database'); // Update path if needed to match your structure
 const Product = require('./Product');
+const Container = require('./Container');
 
 // Define the Measurement model
 const Measurement = sequelize.define('Measurement', {
@@ -11,16 +12,8 @@ const Measurement = sequelize.define('Measurement', {
     primaryKey: true,
     autoIncrement: true,
   },
-  tare: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-  initialGross: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-  currentGross: {
-    type: DataTypes.FLOAT,
+  timestamp: {
+    type: DataTypes.DATE,
     allowNull: false,
   },
   lastUpdatedBy: {
@@ -37,8 +30,10 @@ const Measurement = sequelize.define('Measurement', {
   },
 });
 
-// Define relationships between Measurement and Product
+// Define relationships between Measurement, Product, and Container
 Product.hasMany(Measurement, { foreignKey: 'productId' });
 Measurement.belongsTo(Product, { foreignKey: 'productId' });
+Measurement.hasMany(Container, { foreignKey: 'measurementId' });
+Container.belongsTo(Measurement, { foreignKey: 'measurementId' });
 
 module.exports = Measurement;

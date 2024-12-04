@@ -1,3 +1,5 @@
+// src/index.js
+
 // Import necessary libraries
 const express = require('express');
 const session = require('express-session');
@@ -25,10 +27,13 @@ app.use(
 // Import models
 const Product = require('./src/models/Product');
 const Measurement = require('./src/models/Measurement');
+const Container = require('./src/models/Container');
 
 // Define model relationships
-Product.hasMany(Measurement, { foreignKey: 'productId' }); // Establish one-to-many relationship between Product and Measurement
+Product.hasMany(Measurement, { foreignKey: 'productId' });
 Measurement.belongsTo(Product, { foreignKey: 'productId' });
+Measurement.hasMany(Container, { foreignKey: 'measurementId' });
+Container.belongsTo(Measurement, { foreignKey: 'measurementId' });
 
 // This sync will ensure tables are created before handling any requests
 (async () => {
@@ -37,18 +42,13 @@ Measurement.belongsTo(Product, { foreignKey: 'productId' });
     console.log('Database connection established successfully.');
 
     // Synchronize all models
-    if (process.env.NODE_ENV === 'development') {
-      // Use { force: true } in development to reset tables if needed, but avoid data loss in production
-      await sequelize.sync({ force: true });
-    } else {
-      await sequelize.sync();
-    }
-
+    await sequelize.sync(); // Use { force: true } during development to reset tables
     console.log('Database synchronized.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
 })();
+
 
 // Import routes
 const productRoutes = require('./src/routes/products');
