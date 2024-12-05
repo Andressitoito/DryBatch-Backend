@@ -4,11 +4,13 @@
     "seed": "node seedDatabase.js"
   },
   "dependencies": {
-    "bcrypt": "^5.x",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "connect-session-sequelize": "^7.1.7",
     "cors": "^2.x",
     "dotenv": "^16.x",
     "exceljs": "^4.x",
-    "express": "^4.x",
+    "express": "^4.21.1",
     "express-session": "^1.x",
     "mysql2": "^3.11.5",
     "pg": "^8.x",
