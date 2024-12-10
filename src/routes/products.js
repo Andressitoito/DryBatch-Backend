@@ -159,15 +159,16 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const product = await Product.findByPk(id);
-    if (product) {
-      await product.destroy();
-      res.status(200).send('Product deleted successfully');
-    } else {
-      res.status(404).json({ error: 'Product not found' });
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
     }
+
+    await product.destroy(); // Cascades to measurements and containers if defined in DB
+    res.status(200).send('Product and all associated data deleted successfully');
   } catch (error) {
     res.status(500).json({ error: 'Error deleting product', details: error.message });
   }
 });
+
 
 module.exports = router;

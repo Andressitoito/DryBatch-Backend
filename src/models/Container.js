@@ -22,6 +22,10 @@ const Container = sequelize.define('Container', {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+  lastChange: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
   measurementId: {
     type: DataTypes.INTEGER,
     allowNull: false,
