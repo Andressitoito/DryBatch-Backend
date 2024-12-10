@@ -20,6 +20,8 @@ router.get('/users', async (req, res) => {
   }
 });
 
+
+
 // Register route
 router.post('/register', async (req, res) => {
   let { name, lastname, password } = req.body;
@@ -61,38 +63,151 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login route
-router.post('/login', async (req, res) => {
-  const { name, lastname, password } = req.body;
+router.get('/test-cookie', (req, res) => {
+  res.cookie('testCookie', 'testValue', {
+    httpOnly: true,
+    secure: false, // For development
+    sameSite: 'None',
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    domain: 'localhost', 
+  });
+  res.send('Test cookie sent');
+});
+
+// GET /session - Validate and fetch the current session
+router.get('/session', async (req, res) => {
 
   try {
-    const user = await User.findOne({ where: { name, lastname } });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    console.log("this route hit ")
+    if (req.session.user) {
+      // Fetch user details from the database to ensure session data is up-to-date
+      const { id } = req.session.user;
+      const user = await User.findOne({
+        where: { id },
+        attributes: ['id', 'name', 'lastname'], // Fetch required user fields
+      });
+
+
+      console.log("user found ", user)
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      // Update the session in case user details changed
+      req.session.user = {
+        id: user.id,
+        name: capitalize(user.name),
+        lastname: capitalize(user.lastname),
+      };
+
+      return res.json({ user: req.session.user });
+    } else {
+      return res.status(401).json({ error: "No active session" });
+    }
+  } catch (error) {
+    console.error("Error fetching session:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  let { name, lastname, password } = req.body;
+
+  name = capitalize(name);
+  lastname = capitalize(lastname);
+
+  try {
+    const user = await User.findOne({
+      where: { name, lastname },
+      attributes: ['id', 'name', 'lastname', 'password'],
+    });
+
+    if (!user) {
       return res.status(401).json({ error: 'Credenciales inválidas.' });
     }
 
-    // Store user information in the session
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    if (!passwordMatches) {
+      return res.status(401).json({ error: 'Credenciales inválidas.' });
+    }
+
     req.session.user = { id: user.id, name: user.name, lastname: user.lastname };
 
-    res.json({
-      message: 'Inicio de sesión exitoso.',
-      user: req.session.user, // Send user details back to the client
+    // Save the session explicitly and check for errors
+    req.session.save((err) => {
+      if (err) {
+        console.error("Error saving session:", err);
+        return res.status(500).json({ error: "Failed to save session." });
+      }
+
+      console.log("Set-Cookie sent with session ID");
+      res.json({
+        message: 'Inicio de sesión exitoso.',
+        user: req.session.user,
+      });
     });
   } catch (error) {
+    console.error('Error during login:', error);
     res.status(500).json({ error: 'Error al iniciar sesión.' });
   }
 });
+
 
 // Logout route
 router.post('/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
+      // If an error occurs, send a 500 status code
       return res.status(500).json({ error: 'Error al cerrar sesión.' });
     }
+
+    // Clear the session cookie to ensure the browser deletes it
+    res.clearCookie("connect.sid", {
+      path: "/", // Match the path used in the session middleware
+      httpOnly: true,
+      sameSite: "None",
+      secure: false, // Use true in production with HTTPS
+    });
+
+    // Send a success response
     res.json({ message: 'Cierre de sesión exitoso.' });
   });
 });
+
+
+// Route to destroy a session by user ID
+router.post('/admin/logout-user', async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required.' });
+  }
+
+  try {
+    // Query the session store to find the session(s) for the user
+    const sessions = await Session.findAll({ where: { data: { [Op.like]: `%${userId}%` } } });
+
+    if (!sessions || sessions.length === 0) {
+      return res.status(404).json({ error: 'No sessions found for the user.' });
+    }
+
+    // Destroy all sessions for the user
+    for (const session of sessions) {
+      await req.sessionStore.destroy(session.sid, (err) => {
+        if (err) {
+          console.error('Error destroying session:', err);
+        }
+      });
+    }
+
+    res.json({ message: `All sessions for user ${userId} have been destroyed.` });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'An error occurred while destroying sessions.' });
+  }
+});
+
 
 // Get current user route
 router.get('/current', (req, res) => {
