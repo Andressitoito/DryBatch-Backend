@@ -24,9 +24,13 @@ router.get('/users', async (req, res) => {
 
 // Register route
 router.post('/register', async (req, res) => {
-  let { name, lastname, password } = req.body;
+  let { name, lastname, password, token } = req.body;
 
-  console.log('Incoming registration request:', { name, lastname, password });
+  if(token != "mHlMAi8ExJ17Euc") {
+    return res.status(400).json({
+      error: 'Token invalido',
+    });
+  }
 
   if (!name || !lastname || !password) {
     return res.status(400).json({
@@ -52,7 +56,6 @@ router.post('/register', async (req, res) => {
       password: hashedPassword,
     });
 
-    console.log('New User Created:', newUser);
 
     res.status(201).json({
       message: 'Usuario registrado exitosamente.',
