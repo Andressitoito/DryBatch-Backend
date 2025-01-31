@@ -20,13 +20,54 @@ router.get('/users', async (req, res) => {
   }
 });
 
+// Delete user by name and lastname
+router.delete('/delete-user', async (req, res) => {
+  const { name, lastname, token } = req.body;
 
+  // Validate the token
+  if (token !== process.env.AUTH_TOKEN) {
+    return res.status(400).json({
+      error: 'Token inválido',
+    });
+  }
+
+  if (!name || !lastname) {
+    return res.status(400).json({
+      error: 'Nombre y apellido son requeridos.',
+    });
+  }
+
+  // Capitalize the name and lastname to match the database
+  const capitalizedName = capitalize(name);
+  const capitalizedLastname = capitalize(lastname);
+
+  try {
+    // Find the user by name and lastname
+    const user = await User.findOne({
+      where: { name: capitalizedName, lastname: capitalizedLastname },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado.' });
+    }
+
+    // Delete the user
+    await user.destroy();
+
+    res.status(200).json({
+      message: 'Usuario eliminado exitosamente.',
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Error al eliminar usuario.' });
+  }
+});
 
 // Register route
 router.post('/register', async (req, res) => {
   let { name, lastname, password, token } = req.body;
 
-  if(token != "mHlMAi8ExJ17Euc") {
+  if (token !== process.env.AUTH_TOKEN) {
     return res.status(400).json({
       error: 'Token invalido',
     });
@@ -50,7 +91,7 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
+    await User.create({
       name,
       lastname,
       password: hashedPassword,
@@ -72,7 +113,7 @@ router.get('/test-cookie', (req, res) => {
     secure: false, // For development
     sameSite: 'None',
     maxAge: 24 * 60 * 60 * 1000, // 1 day
-    domain: 'localhost', 
+    domain: 'localhost',
   });
   res.send('Test cookie sent');
 });
