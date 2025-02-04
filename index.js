@@ -78,7 +78,7 @@ Container.belongsTo(Measurement, { foreignKey: 'measurementId' });
     console.log('Database synchronized.');
 
     // Sync the session store table
-    await sessionStore.sync();
+    sessionStore.sync();
     console.log('Session store table synchronized.');
   } catch (error) {
     console.error('Error during database synchronization:', error);
